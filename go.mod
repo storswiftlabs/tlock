@@ -1,4 +1,4 @@
-module github.com/drand/tlock
+module github.com/storswiftlabs/tlock
 
 go 1.19
 
