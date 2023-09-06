@@ -3,17 +3,18 @@ package tlock_test
 import (
 	"bytes"
 	_ "embed" // Calls init function.
-	"github.com/drand/drand/crypto"
-	bls "github.com/drand/kyber-bls12381"
-	"github.com/stretchr/testify/require"
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/drand/drand/chain"
+	"github.com/drand/drand/crypto"
+	bls "github.com/drand/kyber-bls12381"
 	"github.com/drand/tlock"
 	"github.com/drand/tlock/networks/http"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -23,9 +24,9 @@ var (
 
 const (
 	testnetHost      = "https://pl-us.testnet.drand.sh/"
-	testnetChainHash = "7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf"
+	testnetChainHash = "cc9c398442737cbd141526600919edd69f1d6f9b4adb67e4d912fbc64341a9a5"
 	mainnetHost      = "https://api.drand.sh/"
-	mainnetChainHash = "dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493"
+	mainnetChainHash = "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971"
 )
 
 func TestEarlyDecryptionWithDuration(t *testing.T) {
@@ -222,14 +223,17 @@ func TestCannotEncryptWithPointAtInfinity(t *testing.T) {
 
 func TestDecryptText(t *testing.T) {
 	cipher := `-----BEGIN AGE ENCRYPTED FILE-----
-YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHRsb2NrIDIgZGJkNTA2ZDZlZjc2ZTVm
-Mzg2ZjQxYzY1MWRjYjgwOGM1YmNiZDc1NDcxY2M0ZWFmYTNmNGRmN2FkNGU0YzQ5
-MwpzRXAvVVpBQXlDSjE1QUxDaUFnQ1E2cEd1elJXS0kzMkpsQnBxUFAzcHVvdWRT
-a2w0OXJ0NC9rMmd0UHlVMTRxCkN3MERjVUJVUlloT2UrRjZsSE9lTFgwMkZNMjk3
-UGpwNlBZL09WY3NoblhqMTVMbU9FeXV1MjlDcmJGQXU3SmgKcWxlbjFtaXBONWUz
-eFpVQysxQWtjS1Z3SU9uRjJWaW8veUpkNEUyVHhQWQotLS0gN21xSHhranNqMEND
-UG9qN2haU0FWdEpFK0pUZzUwWmVsVS9YRWdOaDRadwpeDBRfXZtLOC49GlI+Kozr
-z6hgtLUPYvAimgekc+CeyJ8fb/0MVrpq/Ewnx1MpKig8nQ==
+YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHRsb2NrIDM5MTUwNiA1MmRiOWJhNzBl
+MGNjMGY2ZWFmNzgwM2RkMDc0NDdhMWY1NDc3NzM1ZmQzZjY2MTc5MmJhOTQ2MDBj
+ODRlOTcxCmxkby91Wkx4eW1rc3Z4WDNIVWxDREpEdm5sWE1qeFU1K09JditIMFlK
+ak5sUFQwbWwvNUtyemUxQnhTT2RNTkkKRXF3ZDBVV1RBWU1PVHBlV0R3L2d0c2hN
+OUhkWUE0YzJJdGMxcUFoRElUR2NKQkh0Nnc5N2dIUldadVZ4UU5yaApONWNPNyty
+QkJRSkY4MlFRRkJZVUMxNGpiL1VZYjNGaDFsUVNuelVic0dVCi0tLSAxb1NNRnp6
+M2NqcDBjT3FVdmtIQnQ5Y044MUlsV3hZM29GZVg5T05hSzdFCjkZYt1Cam0OPjdn
+WdBQADOMF88wDRmZEnDw+D1j/8NrJXLI87enseShAns+L/NkNGhA8oiA+ZxaTbfs
+wcryvxRQprkmX2IEfSUWZWyCTV47cA+5XEdfpFK0Ull7VaTh7dhkcozwc5kruI8Z
+1txsd/vjXpKRj199cfL6tEIH0fR+re6AHhCRljKWhsUpCyGuRnBFO5/KpVsTPx3h
+hbioFa3010UG
 -----END AGE ENCRYPTED FILE-----`
 	t.Run("With valid network", func(tt *testing.T) {
 		network, err := http.NewNetwork(mainnetHost, mainnetChainHash)
@@ -241,7 +245,18 @@ z6hgtLUPYvAimgekc+CeyJ8fb/0MVrpq/Ewnx1MpKig8nQ==
 		err = tlock.New(network).Decrypt(&plainData, testReader)
 		require.NoError(tt, err)
 
-		require.Equal(tt, "Hello drand World\n", plainData.String())
+		type Message struct {
+			Time    int    `json:"Time"`
+			Option  string `json:"option"`
+			Address string `json:"Address"`
+		}
+		expected := Message{1693810319389, "Yes\n", "0x8f794a441b5cc022926027d29fa1ce173793976577d614abc25921b225f99db7"}
+
+		var fromJson Message
+		err = json.Unmarshal(plainData.Bytes(), &fromJson)
+		require.NoError(tt, err)
+
+		require.Equal(tt, expected, fromJson)
 	})
 
 	t.Run("With invalid network", func(tt *testing.T) {
@@ -259,16 +274,16 @@ z6hgtLUPYvAimgekc+CeyJ8fb/0MVrpq/Ewnx1MpKig8nQ==
 func TestInteropWithJS(t *testing.T) {
 	t.Run("on Mainnet with G1 sigs", func(t *testing.T) {
 		cipher := `-----BEGIN AGE ENCRYPTED FILE-----
-YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHRsb2NrIDEgZGJkNTA2ZDZlZjc2ZTVm
-Mzg2ZjQxYzY1MWRjYjgwOGM1YmNiZDc1NDcxY2M0ZWFmYTNmNGRmN2FkNGU0YzQ5
-MwpvMTZVWGpocTM2Y0U0aExDY3B2SThMNEJhNzNLbXZ1T3dUR0x4L2QvMWdISTdk
-cDBWbE9IeUhXYUxaalNEUUlSCkIxZHBJeG82RVVLekFMU1FtQ1VFbjhwZHNHMHRy
-anlsZjJPTFZHelNYdFhwQXhPSEljbnY2SVp1ck1sZ3RybDIKTk1KOWhsSWZoOFEz
-Z3MrWGNCc0F2NGY2L2k5dVJlZlFJeUhtU1AvMDZxdwotLS0gbEtQSXMzeVNZMmUw
-RndkR1oyL0xFTkZILzl4Y3NBOU5EWXRGcDBObmZidwpiI9yHPl4yVTbeImtNOklv
-Ds7/d2pdgkRooMJ58zoZd+AFXtAn2+7yGehvtkrWoSxgA8cf1aLuHFTAHho=
+YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHRsb2NrIDMzOTU5MiA1MmRiOWJhNzBl
+MGNjMGY2ZWFmNzgwM2RkMDc0NDdhMWY1NDc3NzM1ZmQzZjY2MTc5MmJhOTQ2MDBj
+ODRlOTcxCmpUd2pKVnN4ZHpBOVJkZk4vRDhFM0Ira3AvNTVDTHVGMlFnaTE4b1Z1
+aHdFL1d6SUxZQk5VNkZPRUM5MVRIZW8KRk5pSnN4RUppU3pqbnRGRHZCWlpxaHRx
+UHRyL3dyZXRnYmhsN0JSZm9KM1hPMy9qUzZFL0prVldqeEhWZWMzVQoxenZIY2o3
+TFJjYlFQaVFuT2NoUnZxbWxTS0I2YWFVenlzdjNjdTJwQUhvCi0tLSBNbnJqbTJ1
+cFFvS3l2azkrSmlaM1BjNWtLYUhpMktSOEk1VkdsUmJQMmZzCtj+TQ33fW5scRgm
+iQdyc3S+14kzFECervdIV0YEQNMYJczz6dAHu1C3vCvbFRs=
 -----END AGE ENCRYPTED FILE-----`
-		expected := "hello world and other things"
+		expected := "hello quicknet"
 		network, err := http.NewNetwork(mainnetHost, mainnetChainHash)
 		require.NoError(t, err)
 
@@ -281,17 +296,18 @@ Ds7/d2pdgkRooMJ58zoZd+AFXtAn2+7yGehvtkrWoSxgA8cf1aLuHFTAHho=
 		require.Equal(t, expected, plainData.String())
 	})
 
-	t.Run("on Testnet with G2 sigs", func(t *testing.T) {
+	t.Run("on Testnet with G1 sigs", func(t *testing.T) {
 		cipher := `-----BEGIN AGE ENCRYPTED FILE-----
-YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHRsb2NrIDEgNzY3Mjc5N2Y1NDhmM2Y0
-NzQ4YWM0YmYzMzUyZmM2YzZiNjQ2OGM5YWQ0MGFkNDU2YTM5NzU0NWM2ZTJkZjVi
-ZgpnQUNaY1NzYm55Q0ZneEsrSVB4WFpvcGY5SEZrSG1XUFZRallneWNiZmtKTk1P
-VUVUUDM2SU1wNGR1YktNTnBHClJOZkJ5VzZYYlZJVHhtK0tUWnBEa2poVXVxazdl
-WDEwRTAxTXB4VkxDancKLS0tIENjeTd4N2VSeUh5Sk54eVFKTGRjQ3ZEQjZTRDA4
-ZEFUb0ZyZS9aSHpyWVkKKwNyX6cuEEENAjic1ew7k8G6vyxDrY5NWFbAhkKy0IrN
-jLK74v9Latit5qAD7Gu/zTIsQXMuCuUf7ma7
+YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHRsb2NrIDE1MzAwNDUgY2M5YzM5ODQ0
+MjczN2NiZDE0MTUyNjYwMDkxOWVkZDY5ZjFkNmY5YjRhZGI2N2U0ZDkxMmZiYzY0
+MzQxYTlhNQp1QjNLbmlaeVFDbGk1d0N4b25OL2UvQzFYMmI1ZzMyWW01VWRwVEtR
+aGtQM3l4TUMxdWhlaFdDZ0NRS0hKcDU5CkV0UkNXazhCckNlWVArcnduZjR2OVd3
+dWpFWk11TGp1SUt1Q3F1SXdNcEdUaHc0VXJEbEVablU5ZndPZDBkcXgKejd6aXZR
+bFFVQU44ekhZWjhwM2RJekR4NC9la25OQWk5UHhUN1daYTFCTQotLS0gNXZDS3lY
+ZlVySU92d29LZEhGR2h6ZUZiVitQSjBsNEVnM1JtWC9INm9YWQoyPsJWIBkmJPZi
+oG32+guUclyoVQKHLIGYYAQ5QjSP0TRi6NqURkKBMpPyUe/D
 -----END AGE ENCRYPTED FILE-----`
-		expected := "hello world and other things"
+		expected := "hello quicknet"
 		network, err := http.NewNetwork(testnetHost, testnetChainHash)
 		require.NoError(t, err)
 

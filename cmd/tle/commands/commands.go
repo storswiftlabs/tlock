@@ -14,7 +14,7 @@ import (
 // Default settings.
 const (
 	defaultNetwork = "https://api.drand.sh/"
-	defaultChain   = "dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493"
+	defaultChain   = "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971"
 )
 
 // =============================================================================
@@ -42,13 +42,12 @@ If the OUTPUT exists, it will be overwritten.
 
 NETWORK defaults to the drand mainnet endpoint https://api.drand.sh/.
 
-CHAIN defaults to the chainhash of the fastnet network:
-dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493
+CHAIN defaults to the chainhash of the quicknet network:
+52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
 
 You can also use the drand test network:
 https://pl-us.testnet.drand.sh/
-and its unchained network with chain hash 7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf
-Note that if you encrypted something prior to March 2023, this was the only available network and used to be the default.
+and its unchained network with chain hash cc9c398442737cbd141526600919edd69f1d6f9b4adb67e4d912fbc64341a9a5
 
 DURATION, when specified, expects a number followed by one of these units:
 "ns", "us" (or "µs"), "ms", "s", "m", "h", "d", "M", "y".

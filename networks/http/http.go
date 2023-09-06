@@ -6,8 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/drand/drand/chain"
-	"github.com/drand/drand/crypto"
 	"log"
 	"net"
 	"net/http"
@@ -15,8 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drand/drand/chain"
 	"github.com/drand/drand/client"
 	dhttp "github.com/drand/drand/client/http"
+	"github.com/drand/drand/crypto"
 	"github.com/drand/kyber"
 )
 
@@ -72,7 +72,7 @@ func NewNetwork(host string, chainHash string) (*Network, error) {
 		return nil, ErrNotUnchained
 	}
 
-	if !(sch.Name == crypto.UnchainedSchemeID || sch.Name == crypto.ShortSigSchemeID) {
+	if !(sch.Name == crypto.SigsOnG1ID || sch.Name == crypto.UnchainedSchemeID || sch.Name == crypto.ShortSigSchemeID) {
 		return nil, ErrNotUnchained
 	}
 

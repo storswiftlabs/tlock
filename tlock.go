@@ -6,17 +6,18 @@ package tlock
 import (
 	"bufio"
 	"errors"
+	"fmt"
+	"io"
+	"time"
+
 	"filippo.io/age"
 	"filippo.io/age/armor"
-	"fmt"
 	"github.com/drand/drand/chain"
 	"github.com/drand/drand/crypto"
 	"github.com/drand/kyber"
 	bls "github.com/drand/kyber-bls12381"
 	"github.com/drand/kyber/encrypt/ibe"
 	"gopkg.in/yaml.v3"
-	"io"
-	"time"
 )
 
 // ErrTooEarly represents an error when a decryption operation happens early.
@@ -135,7 +136,9 @@ func TimeLock(scheme crypto.Scheme, publicKey kyber.Point, roundNumber uint64, d
 
 	var cipherText *ibe.Ciphertext
 	var err error
-	if scheme.Name == crypto.ShortSigSchemeID {
+	if scheme.Name == crypto.SigsOnG1ID {
+		cipherText, err = ibe.EncryptCCAonG2(bls.NewBLS12381Suite(), publicKey, id, data)
+	} else if scheme.Name == crypto.ShortSigSchemeID {
 		cipherText, err = ibe.EncryptCCAonG2(bls.NewBLS12381Suite(), publicKey, id, data)
 	} else if scheme.Name == crypto.UnchainedSchemeID {
 		cipherText, err = ibe.EncryptCCAonG1(bls.NewBLS12381Suite(), publicKey, id, data)
@@ -158,7 +161,13 @@ func TimeUnlock(scheme crypto.Scheme, publicKey kyber.Point, beacon chain.Beacon
 
 	var data []byte
 	var err error
-	if scheme.Name == crypto.ShortSigSchemeID {
+	if scheme.Name == crypto.SigsOnG1ID {
+		var signature bls.KyberG1
+		if err := signature.UnmarshalBinary(beacon.Signature); err != nil {
+			return nil, fmt.Errorf("unmarshal kyber G1: %w", err)
+		}
+		data, err = ibe.DecryptCCAonG2(bls.NewBLS12381Suite(), &signature, ciphertext)
+	} else if scheme.Name == crypto.ShortSigSchemeID {
 		var signature bls.KyberG1
 		if err := signature.UnmarshalBinary(beacon.Signature); err != nil {
 			return nil, fmt.Errorf("unmarshal kyber G1: %w", err)

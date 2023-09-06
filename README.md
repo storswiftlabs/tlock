@@ -10,9 +10,11 @@ Working endpoints to access it are, on mainnet:
 - https://api2.drand.sh/ (EU)
 - https://api3.drand.sh/ (Asia)
 - https://drand.cloudflare.com/ (load-balanced across regions)
+- https://api.drand.secureweb3.com:6875/ (CN)
 
 On mainnet, the only chainhash supporting timelock encryption, with a 3s frequency and signatures on the G1 group is:
-`dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493`
+`52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971`
+Note that `dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493` is [deprecated](https://drand.love/blog/2023/07/03/fastnet-sunset-quicknet-new/) and will be stopped entirely in December 2023.
 
 This is a production-ready network with high-availability guarantees. It is considered fully secure by the drand team 
 and ran by the same League of Entropy that has been running drand in production since 2019.
@@ -21,9 +23,10 @@ On testnet:
 - https://pl-us.testnet.drand.sh/
 - https://pl-eu.testnet.drand.sh/
 - https://testnet0-api.drand.cloudflare.com/
-where we have two networks supporting timelock:
+where we have three networks supporting timelock:   
+- running with a 3 seconds frequency with signatures on G1: `cc9c398442737cbd141526600919edd69f1d6f9b4adb67e4d912fbc64341a9a5`
 - running with a 3 seconds frequency with signatures on G1: `f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c`
-- running with a 3 seconds frequency with signatures on G2: `7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf`
+- running with a 3 seconds frequency with signatures on G2: `7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf` (deprecated!)
 Note these are relying on the League of Entropy **Testnet**, which should not be considered secure.
 
 You can also spin up a new drand network and run your own, but note that the security guarantees boil down to the trust you have in your network.
@@ -97,13 +100,12 @@ If the OUTPUT exists, it will be overwritten.
 
 NETWORK defaults to the drand mainnet endpoint https://api.drand.sh/.
 
-CHAIN defaults to the chainhash of the fastnet network:
-dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493
+CHAIN defaults to the chainhash of the quicknet network:
+52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
 
 You can also use the drand test network:
 https://pl-us.testnet.drand.sh/
-and its unchained network with chain hash 7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf
-Note that if you encrypted something prior to March 2023, this was the only available network and used to be the default.
+and its unchained network with chain hash cc9c398442737cbd141526600919edd69f1d6f9b4adb67e4d912fbc64341a9a5
 
 DURATION, when specified, expects a number followed by one of these units:
 "ns", "us" (or "µs"), "ms", "s", "m", "h", "d", "M", "y".
@@ -121,18 +123,18 @@ Files can be encrypted using a duration (`--duration/-D`) in which the `encrypte
 
 Example using the testnet network and a duration of 5 seconds:
 ```bash
-$ tle -n="https://pl-us.testnet.drand.sh/" -c="7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf" -D=5s -o=encrypted_data data.txt
+$ tle -n="https://pl-us.testnet.drand.sh/" -c="cc9c398442737cbd141526600919edd69f1d6f9b4adb67e4d912fbc64341a9a5" -D=5s -o=encrypted_data data.txt
 ```
 
 If a round (`--round/-R`) number is known, it can be used instead of the duration. The data can be decrypted only when that round becomes available in the network.
 
-Example using the fastnet mainnet network and a given round:
+Example using the quicknet mainnet network and a given round:
 ```bash
-$ tle -n="https://api.drand.sh/" -c="dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493" -r=123456 -o=encrypted_data data.txt
+$ tle -n="https://api.drand.sh/" -c="52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971" -r=123456 -o=encrypted_data data.txt
 ```
 
 It is also possible to encrypt the data to a PEM encoded format using the armor (`--armor/-a`) flag,
-and to rely on the default network and chain hash (which is the `fastnet` one on `api.drand.sh`):
+and to rely on the default network and chain hash (which is the `quicknet` one on `api.drand.sh`):
 ```bash
 $ tle -a -D 20s -o=encrypted_data.PEM data.txt
 ```
@@ -141,14 +143,14 @@ $ tle -a -D 20s -o=encrypted_data.PEM data.txt
 
 For decryption, it's only necessary to specify the network if you're not using the default one.
 
-Using the default ("fastnet" network on mainnet) and printing on stdout:
+Using the default ("quicknet" network on mainnet) and printing on stdout:
 ```bash
 $ tle -d encrypted_data
 ```
 
-Using the old testnet unchained network and storing the output in a file named "decrypted_data":
+Using the testnet unchained network and storing the output in a file named "decrypted_data":
 ```bash
-$ tle -d -n="https://pl-us.testnet.drand.sh/" -c="7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf"
+$ tle -d -n="https://pl-us.testnet.drand.sh/" -c="cc9c398442737cbd141526600919edd69f1d6f9b4adb67e4d912fbc64341a9a5"
  -o=decrypted_data encrypted_data
 ```
 Note it will overwrite the `decrypted_data` file if it already exists.
@@ -172,9 +174,9 @@ if err != nil {
 }
 defer in.Close()
 
-// Construct a network that can talk to a drand network. Example using the mainnet fastnet network.
+// Construct a network that can talk to a drand network. Example using the mainnet quicknet network.
 // host:      "https://api.drand.sh/"
-// chainHash: "dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493"
+// chainHash: "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971"
 network,err := http.NewNetwork(host, chainHash)
 if err != nil {
 	log.Fatalf("new network: %s", err)
@@ -210,7 +212,7 @@ defer in.Close()
 
 // Construct a network that can talk to a drand network.
 // host:      "https://api.drand.sh/"
-// chainHash: "dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493"
+// chainHash: "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971"
 network,err := http.NewNetwork(host, chainHash)
 if err != nil {
 	log.Fatalf("new network: %s", err)
@@ -263,7 +265,7 @@ Please note that neither BLS nor the IBE scheme we are relying on are "quantum r
 
 However, such a quantum computer seems unlikely to be built within the next 5-10 years and therefore we currently consider that you can expect a "**long term security**" horizon of at least 5 years by relying on our design.
 
-Finally, relying on the League of Entropy **Testnet** should not be considered secure and be used only for testing purposes. We recommend relying on the League of Entropy `fastnet` beacon chain running on **Mainnet** for securing timelocked content.
+Finally, relying on the League of Entropy **Testnet** should not be considered secure and be used only for testing purposes. We recommend relying on the League of Entropy `quicknet` beacon chain running on **Mainnet** for securing timelocked content.
 
 Our timelock scheme and code was reviewed by cryptography and security experts from Kudelski and the report is available on IPFS at [`QmWQvTdiD3fSwJgasPLppHZKP6SMvsuTUnb1vRP2xM7y4m`](https://ipfs.io/ipfs/QmWQvTdiD3fSwJgasPLppHZKP6SMvsuTUnb1vRP2xM7y4m).
 
